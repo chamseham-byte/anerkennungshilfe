@@ -250,6 +250,29 @@ table.formular td:last-child { width: 30%; padding-right: 0; }
 .rahmenhinweis { padding: 12px var(--rand); border-bottom: 1px solid var(--linie); font-weight: 600; color: var(--dunkel); }
 .rahmenhinweis p { max-width: 900px; }
 textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace, monospace; font-size: 14px; }
+
+/* Ab Fassung 0.5.2: zwei Wege auf dem Bild „Formular“, Leiste zum Speichern, Ansicht des gespeicherten PDFs */
+.frage .knoepfe.wege { margin-top: 18px; }
+#block-hand { margin-top: 0; }
+a.schlicht { display: inline-flex; align-items: center; }
+html.mit-leiste { scroll-padding-bottom: 104px; }
+.speicherleiste { position: sticky; bottom: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding: 12px 0; background: #ffffff; border-top: 1px solid var(--linie); }
+.speicherleiste.ruht { visibility: hidden; }
+.speicherleiste p { font-weight: 600; color: var(--dunkel); }
+.speicherleiste .knopf { min-height: 48px; padding: 0 24px; }
+.ansicht .meldung { min-height: 0; }
+.ansicht .blaetter { display: flex; flex-direction: column; gap: 18px; }
+.ansicht .blaetter img { display: block; width: 100%; max-width: 1100px; height: auto; border: 1px solid var(--linie); }
+@media (max-width: 600px) {
+  .speicherleiste { padding: 8px 0; gap: 6px 16px; }
+  .speicherleiste p { font-size: 15px; }
+  .speicherleiste .knopf { min-height: 44px; padding: 0 16px; font-size: 16px; }
+}
+
+/* Ab Fassung 0.5.3: Eine gewählte Antwort wird nicht mehr grün hinterlegt. Die Wahl zeigen der Punkt oder der Haken und die fettere Schrift. */
+.antwort.gewaehlt .wort span { background: none; padding: 0; margin-left: 0; }
+@media (forced-colors: active) { .antwort.gewaehlt .wort span { outline: 0; } }
+strong { font-weight: 600; }
 </style>
 <noscript><style>.buehne { display: none; }</style></noscript>
 </head>
@@ -524,7 +547,12 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
       <div class="frage">
         <h1 id="t-formular" tabindex="-1">Von der Ausgabe der KI zum Formular</h1>
         <p class="hilfe">Die Ausgabe einer KI kann Fehler enthalten. Prüfe sie, bevor du sie weitergibst. Die Seite rechnet die ECTS-Punkte nach.</p>
-        <p class="hilfe">Du kannst die Werte auch von Hand in die beiden Tabellen eintragen. Darunter speicherst du das Formular als PDF. <button type="button" class="schlicht" id="zum-speichern">Zum Speichern springen</button></p>
+        <p class="hilfe">Zwei Wege führen zum ausgefüllten Formular. Du fügst den Block der KI ein oder du trägst deine Werte von Hand in die Tabellen ein. Danach speicherst du das Formular als PDF.</p>
+        <div class="knoepfe wege">
+          <button type="button" class="knopf zweit" id="zum-block">Block der KI einfügen</button>
+          <button type="button" class="knopf zweit" id="zu-tabellen">Von Hand eintragen</button>
+          <button type="button" class="schlicht" id="zum-speichern">Zum Speichern springen</button>
+        </div>
       </div>
 
       <div class="block schmal">
@@ -537,22 +565,24 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
       </div>
 
       <div class="block schmal">
-        <h2>Block für das Formular einfügen</h2>
+        <h2 id="t-block" tabindex="-1">Block für das Formular einfügen</h2>
         <p>Die Ausgabe der KI endet mit Teil G. Dort steht ein Block zwischen den Zeilen FORMULARBLOCK ANFANG und FORMULARBLOCK ENDE. Kopiere ihn und füge ihn hier ein.</p>
+        <p class="klein">In dieses Feld gehört nur der Block der KI. Eigene Werte trägst du unten in die Tabellen ein.</p>
         <div>
           <label class="feld-titel" for="block">Block aus Teil G</label>
           <textarea class="kasten" id="block" spellcheck="false" placeholder="FORMULARBLOCK ANFANG"></textarea>
         </div>
         <div class="knoepfe">
-          <button type="button" class="knopf zweit" id="block-lesen">In das Formular eintragen</button>
+          <button type="button" class="knopf zweit" id="block-lesen">Block in das Formular eintragen</button>
           <button type="button" class="schlicht" id="block-beispiel">Beispiel mit erfundenen Werten ansehen</button>
           <button type="button" class="schlicht" id="formular-leeren">Formular leeren</button>
         </div>
         <p class="meldung" id="block-meldung" role="status" aria-live="polite"></p>
+        <p id="block-hand" hidden><button type="button" class="schlicht" id="zu-tabellen-2">Zu den Tabellen springen</button></p>
       </div>
 
       <section class="block" aria-labelledby="ft">
-        <h2 id="ft">Übersicht zum Nachstudium</h2>
+        <h2 id="ft" tabindex="-1">Übersicht zum Nachstudium</h2>
         <p class="klein schmal">Das ist das Formular der PH als Entwurf mit der neuen Spalte für Sonderfälle und Unklarheiten. Du kannst jeden Wert ändern. In jeder Zeile ergeben Ist, Nachstudium und Offen zusammen das Soll.</p>
         <div class="reihen schmal">
           <div class="reihe"><label for="f-bisher">Bisheriger Studiengang und Hochschule</label><input type="text" id="f-bisher" data-form="bisher" autocomplete="off" maxlength="100"></div>
@@ -565,6 +595,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
         <h3 id="ft2">Blatt 2: Sonderpädagogische Studienanteile im Detail</h3>
         <div class="tabellenrahmen"><table class="formular" id="tabelle-b2" aria-labelledby="ft2"></table></div>
         <h3 id="ft1">Blatt 1: Übersicht</h3>
+        <p class="klein schmal">Die drei Zahlen der ersten Zeile rechnet die Seite aus Blatt 2. Dort lassen sie sich ändern.</p>
         <div class="tabellenrahmen"><table class="formular" id="tabelle-b1" aria-labelledby="ft1"></table></div>
         <p class="meldung" id="rechnung" role="status" aria-live="polite"></p>
       </section>
@@ -582,6 +613,10 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
           <button type="button" class="schlicht" id="block-kopieren">Werte als Block kopieren</button>
         </div>
         <p class="meldung gut" id="pdf-meldung" role="status" aria-live="polite"></p>
+        <div class="knoepfe" id="pdf-wege" hidden>
+          <a class="schlicht" id="pdf-oeffnen">Ausgefülltes PDF im Browser öffnen</a>
+          <button type="button" class="schlicht" id="pdf-teilen" hidden>Ausgefülltes PDF teilen oder sichern</button>
+        </div>
         <p class="klein">Das PDF ist ein Entwurf ohne Logo. Es bleibt ausfüllbar. Datum und Unterschrift trägst du selbst ein.</p>
         <p class="klein">Die Seite speichert nichts. Mit dem Block kannst du später weitermachen. Füge ihn dann oben unter „Block für das Formular einfügen“ wieder ein. Name und Matrikelnummer stehen nicht im Block.</p>
         <div id="block-aus-rahmen" hidden>
@@ -589,6 +624,13 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
           <textarea class="kasten" id="block-aus" readonly spellcheck="false"></textarea>
         </div>
       </div>
+
+      <section class="block ansicht" id="pdf-ansicht" aria-labelledby="t-ansicht" hidden>
+        <h2 id="t-ansicht">So steht es im gespeicherten PDF</h2>
+        <p class="klein schmal">Die beiden Bilder zeigen die Blätter des PDFs mit deinen Einträgen. Ändert sich ein Wert, dann verschwinden sie. Speichere danach neu.</p>
+        <p class="meldung gut" id="pdf-ansicht-lage" role="status" aria-live="polite"></p>
+        <div class="blaetter" id="pdf-ansicht-bilder"></div>
+      </section>
 
       <div class="block schmal">
         <h2>Verstehen</h2>
@@ -610,6 +652,11 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
           <li>Gib das Formular mit Leistungsnachweis, Modulhandbuch und Teil B an die Studienberatung Sonderpädagogik.</li>
           <li>Das Prüfungsamt bestätigt die Übersicht.</li>
         </ol>
+      </div>
+
+      <div class="speicherleiste" id="speicherleiste" role="group" aria-label="Formular speichern">
+        <p id="leiste-stand"></p>
+        <button type="button" class="knopf" id="pdf-speichern-leiste"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m0 0l-4-4m4 4l4-4M3 15v3h14v-3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>Formular als PDF speichern</button>
       </div>
     </section>
 
@@ -661,7 +708,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     <summary>Für die Studienberatung</summary>
     <div class="textfassungen">
       <p>Der Masterprompt ist der Text für die KI ohne Angaben, ohne Zielmodule und ohne Unterlagen. Das Formular ist der Entwurf vom 19.11.2026 mit dem Vorschlag der Spalte „Sonderfälle und Unklarheiten“ vom 25.11.2026. Die Fassung in dieser Seite trägt kein Logo.</p>
-      <p class="wahl"><button type="button" class="schlicht" id="master-text">Masterprompt als Text speichern</button> <button type="button" class="schlicht" id="formular-fuss">Formular als PDF speichern</button></p>
+      <p class="wahl"><button type="button" class="schlicht" id="master-text">Masterprompt als Text speichern</button> <button type="button" class="schlicht" id="formular-fuss">Leeres Formular als PDF speichern</button></p>
       <p class="meldung gut" id="master-meldung" role="status" aria-live="polite"></p>
     </div>
   </details>
@@ -684,7 +731,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
   <details class="standinfo">
     <summary>Stand des Entwurfs</summary>
     <ul>
-      <li>Seite in Fassung 0.5.1 vom 25.11.2026. Neu ist die Sammlung der Ordnungen anderer Studiengänge. Dazu kommen der Hinweis in einer eingebetteten Vorschau und die Werte des Formulars als Block.</li>
+      <li>Seite in Fassung 0.5.3 vom 26.11.2026. Neu ist das Bild „Formular“: Es nennt zwei Wege, hat unten eine Leiste zum Speichern und zeigt beide Blätter des gespeicherten PDFs. Eine gewählte Antwort wird nicht mehr grün hinterlegt. Seit Fassung 0.5 gibt es die Sammlung der Ordnungen anderer Studiengänge.</li>
       <li>Prompt in Fassung 0.4 vom 25.11.2026. Er setzt die Punkte aus dem Probelauf vom 24.11.2026 um. Mit einer KI erprobt ist diese Fassung noch nicht.</li>
       <li>Die Zielmodule und ihre Lernergebnisse stammen aus dem <a href="https://www.ph-freiburg.de/fileadmin/shares/Studium/Studienorganisation/SPOs/BA/BA_Son/anlage3-modulhandbuch-nal-spo-ba-son-final.pdf" target="_blank" rel="noopener">Modulhandbuch des B.A. Lehramt Sonderpädagogik</a> (nichtamtliche Lesefassung, Stand 07.07.2026). Die Lehrveranstaltungen mit ihren ECTS-Punkten stammen aus der <a href="https://www.ph-freiburg.de/fileadmin/shares/Studium/Studienorganisation/SPOs/BA/BA_Son/anlage2-modultabelle-nal-spo-ba-son-final.pdf" target="_blank" rel="noopener">Modultabelle</a> mit demselben Stand. Ein Programm hat 101 Module mit 778 Lernergebnissen und 331 Lehrveranstaltungen aus den PDFs übernommen. Maßgeblich sind die PDFs der PH.</li>
       <li>Welche Lernergebnisse eines Zielmoduls zur Wahl stehen, leitet das Programm aus den Zeilen „Wahlpflichtbereich“ und „oder“ im Modulhandbuch ab. Bei drei Modulen ist das im Modulhandbuch nicht eindeutig festgelegt. Das steht dann im Prompt.</li>
@@ -1294,7 +1341,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     zeile.textContent = '';
     if (f) {
       zeile.appendChild(document.createTextNode('Gewählt ist '));
-      zeile.appendChild(neu('span', { klasse: 'marker', text: f.n }));
+      zeile.appendChild(neu('strong', { text: f.n }));
       zeile.appendChild(document.createTextNode(' mit ' + f.m.length + ' Zielmodulen.' + (f.wahl ? ' Von den ' + ZAHLWORT[f.wahl.aus.length] + ' Wahlpflichtmodulen zählen ' + ZAHLWORT[f.wahl.zahl] + '.' : '')));
     } else if (sauber(Z.fach)) {
       zeile.textContent = 'Dazu passt noch kein Fach aus dem Modulhandbuch. Wähle eines der ' + B.fach.length + ' Fächer aus der Liste.';
@@ -1333,12 +1380,39 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
 
   /* ---------- Unterlagen der Person ---------- */
 
+  // Startet den Arbeiter von pdf.js und wartet auf sein erstes Zeichen. Bleibt es aus, gibt es keinen Arbeiter.
+  // Safari startet ihn nicht, wenn die Seite als Datei vom Gerät geöffnet ist, und meldet dabei keinen Fehler.
+  const ARBEITER_FRIST = 6000;
+  function starteArbeiter(adresse) {
+    return new Promise((fertig) => {
+      let arbeiter = null;
+      let uhr = 0;
+      const ende = (laeuft) => { clearTimeout(uhr); if (!laeuft && arbeiter) arbeiter.terminate(); fertig(laeuft ? arbeiter : null); };
+      uhr = setTimeout(() => ende(false), ARBEITER_FRIST);
+      try {
+        arbeiter = new Worker(adresse, { type: 'module' });
+        arbeiter.addEventListener('message', () => ende(true), { once: true });
+        arbeiter.addEventListener('error', () => ende(false), { once: true });
+      } catch (fehler) { ende(false); }
+    });
+  }
+
   let pdfjsLaden = null;
+  let pdfjsOhneArbeiter = false;
   function holePdfjs() {
     if (!pdfjsLaden) {
       pdfjsLaden = (async () => {
         const modul = await import(URL.createObjectURL(new Blob([PROGRAMME.pdfjs], { type: 'text/javascript' })));
-        modul.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([PROGRAMME.arbeiter], { type: 'text/javascript' }));
+        const adresse = URL.createObjectURL(new Blob([PROGRAMME.arbeiter], { type: 'text/javascript' }));
+        modul.GlobalWorkerOptions.workerSrc = adresse;
+        const arbeiter = await starteArbeiter(adresse);
+        if (arbeiter) {
+          modul.GlobalWorkerOptions.workerPort = arbeiter;
+        } else {
+          // Ohne Arbeiter rechnet pdf.js im Fenster der Seite. Das dauert bei großen PDFs länger, das Ergebnis ist dasselbe.
+          globalThis.pdfjsWorker = await import(adresse);
+          pdfjsOhneArbeiter = true;
+        }
         return modul;
       })();
       pdfjsLaden.catch(() => { pdfjsLaden = null; });
@@ -1701,6 +1775,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     const dies = name();
     alle('.bild').forEach((s) => { s.hidden = s.dataset.bild !== dies; });
     $('buehne').classList.toggle('breit', dies === 'formular');
+    document.documentElement.classList.toggle('mit-leiste', dies === 'formular');
     $('hinweis').textContent = '';
     $('meldung').textContent = '';
     $('stand').textContent = dies === 'start' ? 'Elf Fragen' : (istFrage() ? 'Frage ' + bild + ' von ' + LETZTE : (dies === 'paket' ? 'Dein Paket' : 'Formular'));
@@ -1797,7 +1872,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
         info.classList.toggle('fehler', !d.auswahl);
       }
     }
-    if (el.id === 'block') { $('block-meldung').textContent = ''; }
+    if (el.id === 'block') zeigeBlockLage();
     aktualisiere();
     if (name() === 'paket') { $('meldung').textContent = ''; $('datei-meldung').textContent = ''; }
   }
@@ -1813,6 +1888,9 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     alle('select').forEach((el) => { el.selectedIndex = 0; });
     ['tor-lage', 'mh-lage', 'block-meldung', 'pdf-meldung', 's-lage', 's-fuss-lage'].forEach((id) => { $(id).textContent = ''; });
     $('block-aus-rahmen').hidden = true;
+    $('block-hand').hidden = true;
+    blockStand = '';
+    versteckeAnsicht();
     sWahl = '';
     sAuto = false;
     $('sammlung').open = false;
@@ -2027,15 +2105,33 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     if (r.fehler.length) zeile.textContent = 'Die Rechnung geht noch nicht auf. ' + r.fehler.join(' ');
     else if (stimmt1) zeile.textContent = 'Die Rechnung geht auf. Ist ' + alsText(r.b1.ist) + ', Nachstudium ' + alsText(r.b1.nach) + ' und Offen ' + alsText(r.b1.offen) + ' ergeben zusammen 180 ECTS-Punkte.';
     else zeile.textContent = '';
+    zeigeLeiste();
     return r;
+  }
+
+  // Zählt die Felder, in denen etwas steht. Die drei Zahlen in Zeile 1 von Blatt 1 rechnet die Seite selbst aus, sie zählen nicht mit.
+  const eigeneFelder = () => Object.keys(F).filter((k) => F[k] !== '' && !/^(ist|nach_ects|offen_ects)_1$/.test(k)).length;
+
+  // Die Leiste am unteren Rand sagt jederzeit, wie viel im Formular steht.
+  function zeigeLeiste() {
+    const n = eigeneFelder();
+    const text = n === 0 ? 'Im Formular steht noch nichts.' : (n === 1 ? 'Im Formular ist ein Feld ausgefüllt.' : 'Im Formular sind ' + n + ' Felder ausgefüllt.');
+    if ($('leiste-stand').textContent !== text) $('leiste-stand').textContent = text;
   }
 
   function liesFormular(el) {
     F[el.dataset.form] = el.value;
     $('pdf-meldung').textContent = '';
     $('block-aus-rahmen').hidden = true;
+    versteckeAnsicht();
     rechne();
     aktualisiere();
+  }
+
+  // Liest alle Felder des Formulars noch einmal aus der Seite. Manche Eingabehilfen ändern ein Feld, ohne dass die Seite davon erfährt.
+  function leseFelder() {
+    alle('[data-form]').forEach((el) => { if (!el.readOnly) F[el.dataset.form] = el.value; });
+    return rechne();
   }
 
   function zeigeFormular() {
@@ -2060,12 +2156,42 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     return werte;
   }
 
+  // Der Text des Feldes, wie er zuletzt in das Formular eingetragen wurde
+  let blockStand = '';
+  // Was im Feld für den Block steht: '' heißt leer oder schon eingetragen, 'block' heißt ein Block der KI, 'text' heißt etwas anderes.
+  function blockLage() {
+    const roh = $('block').value.trim();
+    if (!roh || roh === blockStand) return '';
+    return Object.keys(liesBlock(roh)).length ? 'block' : 'text';
+  }
+  const KEIN_BLOCK = 'Dieser Text ist kein Block der KI. Er kommt deshalb nicht in das Formular. Ein Block beginnt mit der Zeile FORMULARBLOCK ANFANG. Eigene Werte trägst du unten in die Tabellen ein.';
+  const FELD_LEER = 'Das Feld ist leer. Füge hier den Block der KI ein. Eigene Werte trägst du unten in die Tabellen ein.';
+  const FELD_LEER_MIT_WERTEN = 'Das Feld ist leer. Deine Einträge aus den Tabellen stehen schon im Formular. Speichere es über die Leiste am unteren Rand als PDF.';
+  // Schon beim Tippen sagt die Seite, ob im Feld ein Block steht.
+  function zeigeBlockLage() {
+    const lage = blockLage();
+    const zeile = $('block-meldung');
+    const text = lage === 'text' ? KEIN_BLOCK : (lage === 'block' ? 'Die Seite erkennt einen Block. Wähle „Block in das Formular eintragen“.' : '');
+    zeile.classList.toggle('gut', lage === 'block');
+    if (zeile.textContent !== text) zeile.textContent = text;
+    $('block-hand').hidden = lage !== 'text';
+  }
+
   function nimmBlock(roh) {
     const werte = liesBlock(roh);
     const zeile = $('block-meldung');
     zeile.classList.remove('gut');
     const gefunden = Object.keys(werte);
-    if (!gefunden.length) { zeile.textContent = 'In diesem Text steht kein Block für das Formular. Der Block beginnt mit der Zeile FORMULARBLOCK ANFANG. Du kannst die Werte auch von Hand in die Tabellen eintragen.'; return false; }
+    if (!gefunden.length) {
+      leseFelder();
+      const mitWerten = eigeneFelder() > 0;
+      zeile.textContent = roh.trim() ? KEIN_BLOCK : (mitWerten ? FELD_LEER_MIT_WERTEN : FELD_LEER);
+      $('block-hand').hidden = mitWerten && !roh.trim();
+      return false;
+    }
+    blockStand = roh.trim();
+    $('block-hand').hidden = true;
+    versteckeAnsicht();
     const hinweise = [];
     const kuerzel = (v) => { const k = String(v || '').toUpperCase().replace(/[^A-Z]/g, ''); return ['LERN', 'SPRA', 'ESENT', 'GENT'].indexOf(k) >= 0 ? k : ''; };
     BLOCK_FELDER.forEach((feld) => {
@@ -2080,8 +2206,9 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     const zeile1 = ['ist_1', 'nach_ects_1', 'offen_ects_1'].map((k) => zahlAus(werte[k]));
     zeigeFormular();
     $('block-aus-rahmen').hidden = true;
+    $('pdf-meldung').textContent = '';
     const r = rechne();
-    const fehlen = ZEILEN_FELDER.filter((f) => /(ist|ects)_\d$/.test(f) && !/^(ist|nach_ects|offen_ects)_1$/.test(f) && F[f] === '');
+    const fehlen =ZEILEN_FELDER.filter((f) => /(ist|ects)_\d$/.test(f) && !/^(ist|nach_ects|offen_ects)_1$/.test(f) && F[f] === '');
     const teile = ['Der Block ist eingetragen.'];
     if (fehlen.length) teile.push((fehlen.length === 1 ? 'Ein Zahlenfeld fehlt' : fehlen.length + ' Zahlenfelder fehlen') + ' im Block (' + fehlen.slice(0, 6).join(', ') + (fehlen.length > 6 ? ' und weitere' : '') + ').');
     if (r.b2.voll && zeile1.every((x) => x !== null && !Number.isNaN(x)) && (zeile1[0] !== r.b2.ist || zeile1[1] !== r.b2.nach || zeile1[2] !== r.b2.offen)) teile.push('Im Block weicht Zeile 1 von den Summen auf Blatt 2 ab. Im Formular stehen die Summen von Blatt 2.');
@@ -2130,21 +2257,38 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
   const ERLAUBT = /[ -~¡-ÿ€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
   const fuerPdf = (text) => Array.from(String(text || '').replace(/\s+/g, ' ').trim()).map((c) => (c in ERSATZ ? ERSATZ[c] : (ERLAUBT.test(c) ? c : '?'))).join('');
 
-  // Trägt die Werte des Formulars in das PDF ein und gibt es als Bytes zurück. Ohne Werte entsteht das leere Formular.
-  async function formularBytes(mitWerten) {
-    const roh = base64ZuBytes(FORMULAR_PDF);
-    if (!mitWerten) return roh;
+  // Was im PDF in den Spalten Nachstudium und Sonderfälle einer Zeile steht. Das PDF hat dort je Zeile nur ein Textfeld.
+  // Die ECTS-Punkte aus den Zahlenfeldern Nachstudium und Offen kommen deshalb mit in den Text, wenn der Text sie nicht schon nennt.
+  // So geht keine Eingabe verloren. In Zeile 1 von Blatt 1 bleibt ein vorhandener Text unverändert, die Zahlen dort sind Summen.
+  function zeilenText(vor, n) {
+    const roh = (k) => String(F[vor + k + '_' + n] || '').trim();
+    const erste = vor === '' && n === 1;
+    const mit = (text, zahlRoh, vorsatz, nennt) => {
+      const z = zahlAus(zahlRoh);
+      if (z === null || z === 0) return text;
+      const angabe = vorsatz + (Number.isNaN(z) ? zahlRoh : alsText(z) + ' ECTS');
+      if (!text) return angabe;
+      if (erste || nennt.test(text)) return text;
+      return angabe + (vorsatz ? '. ' : ': ') + text;
+    };
+    return { nach: mit(roh('nach'), roh('nach_ects'), '', /ECTS|\bLP\b|\bCP\b/i), sonder: mit(roh('sonder'), roh('offen_ects'), 'Offen: ', /offen/i) };
+  }
+
+  // Trägt die Werte des Formulars in das PDF ein. Liefert die Bytes und die Zahl der Felder, in denen danach etwas steht.
+  async function fuelleFormular() {
     const PDFLib = await holePdfLib();
-    const doc = await PDFLib.PDFDocument.load(roh);
+    const doc = await PDFLib.PDFDocument.load(base64ZuBytes(FORMULAR_PDF));
     const form = doc.getForm();
+    let felder = 0;
     const setze = (feld, wert) => {
       const f = form.getTextField(feld);
       let t = fuerPdf(wert);
       const max = f.getMaxLength();
       if (max && t.length > max) t = t.slice(0, max - 3) + '...';
       f.setText(t);
+      if (t) felder += 1;
     };
-    const kreuze = (feld) => form.getCheckBox(feld).check();
+    const kreuze = (feld) => { form.getCheckBox(feld).check(); felder += 1; };
     setze('bisher', F.bisher); setze('fach_name', F.fach);
     setze('name', F.name); setze('name_b2', F.name); setze('matnr', F.matnr); setze('matnr_b2', F.matnr);
     if (F.grundbildung === 'Deutsch') kreuze('gb_deutsch');
@@ -2152,11 +2296,10 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     if (F.fr1) kreuze('fr1_' + F.fr1.toLowerCase());
     if (F.fr2) kreuze('fr2_' + F.fr2.toLowerCase());
     const zeile = (vor, n) => {
-      const nach = zahlAus(F[vor + 'nach_ects_' + n]);
-      const offen = zahlAus(F[vor + 'offen_ects_' + n]);
+      const texte = zeilenText(vor, n);
       setze(vor + 'ist_' + n, F[vor + 'ist_' + n]);
-      setze(vor + 'nach_' + n, F[vor + 'nach_' + n] || (nach ? alsText(nach) + ' ECTS' : ''));
-      setze(vor + 'sonder_' + n, F[vor + 'sonder_' + n] || (offen ? 'Offen: ' + alsText(offen) + ' ECTS' : ''));
+      setze(vor + 'nach_' + n, texte.nach);
+      setze(vor + 'sonder_' + n, texte.sonder);
     };
     for (let i = 1; i <= 6; i += 1) zeile('b2_', i);
     for (let i = 1; i <= 7; i += 1) zeile('', i);
@@ -2164,7 +2307,11 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     const summen = (vor, s) => { setze(vor + 'ist_summe', s.leer ? '' : alsText(s.ist)); setze(vor + 'nach_summe', s.leer ? '' : alsText(s.nach)); setze(vor + 'offen_summe', s.leer ? '' : alsText(s.offen)); };
     summen('b2_', r.b2);
     summen('', r.b1);
-    return doc.save();
+    return { bytes: await doc.save(), felder: felder };
+  }
+  // Das Formular als Bytes. Ohne Werte ist es das leere Formular.
+  async function formularBytes(mitWerten) {
+    return mitWerten ? (await fuelleFormular()).bytes : base64ZuBytes(FORMULAR_PDF);
   }
 
   // Die Werte des Formulars als Block, wie ihn die Seite einliest. Name und Matrikelnummer gehören nicht dazu.
@@ -2172,22 +2319,128 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     return ['FORMULARBLOCK ANFANG'].concat(BLOCK_FELDER.map((feld) => feld + ' =' + (F[feld] ? ' ' + F[feld] : '')), ['FORMULARBLOCK ENDE']).join('\n') + '\n';
   }
   function nimmBlockKopie() {
+    leseFelder();
     const text = blockAusFormular();
     const zeile = $('pdf-meldung');
     $('block-aus').value = text;
     $('block-aus-rahmen').hidden = false;
+    zeile.classList.add('gut');
     kopiere(text, (ok) => {
       zeile.textContent = ok ? 'Deine Werte liegen als Block in der Zwischenablage. Er steht auch im Feld darunter.' : 'Kopieren hat nicht geklappt. Der Block steht im Feld darunter. Markiere ihn dort und kopiere ihn von Hand.';
     });
   }
 
-  function nimmFormularPdf(mitWerten, zeile) {
-    zeile.textContent = mitWerten ? 'Die Seite füllt das Formular aus.' : '';
-    formularBytes(mitWerten).then((bytes) => {
-      const datei = mitWerten ? 'uebersicht-nachstudium-ausgefuellt.pdf' : FORMULAR_NAME;
-      speichereBlob(datei, new Blob([bytes], { type: 'application/pdf' }));
-      zeile.textContent = gespeichert(datei, mitWerten ? 'Kommt keine Datei an, dann kopiere die Werte als Block.' : '');
-    }, () => { zeile.textContent = 'Das Formular ließ sich nicht ausfüllen. Speichere das leere Formular und trage die Werte von Hand ein.'; });
+  // Das leere Formular, so wie es in der Seite steckt
+  function nimmFormularPdf(zeile) {
+    speichereBlob(FORMULAR_NAME, new Blob([base64ZuBytes(FORMULAR_PDF)], { type: 'application/pdf' }));
+    zeile.classList.add('gut');
+    zeile.textContent = gespeichert(FORMULAR_NAME, '');
+  }
+
+  /* ---------- Ausgefülltes Formular: speichern, ansehen, öffnen, teilen ---------- */
+
+  const AUSGEFUELLT = 'uebersicht-nachstudium-ausgefuellt.pdf';
+  // Jedes Speichern bekommt eine Nummer. Ändert sich danach ein Wert, dann gilt ein noch laufendes Zeichnen nicht mehr.
+  let pdfLauf = 0;
+  let pdfUrl = '';
+  let pdfDatei = null;
+
+  function versteckeAnsicht() {
+    pdfLauf += 1;
+    $('pdf-wege').hidden = true;
+    $('pdf-ansicht').hidden = true;
+    $('pdf-ansicht-bilder').textContent = '';
+    $('pdf-ansicht-lage').textContent = '';
+    ['href', 'target', 'rel'].forEach((a) => $('pdf-oeffnen').removeAttribute(a));
+    if (pdfUrl) { URL.revokeObjectURL(pdfUrl); pdfUrl = ''; }
+    pdfDatei = null;
+  }
+
+  // Zeichnet beide Blätter des gespeicherten PDFs als Bild. So ist auf der Seite zu sehen, was im Formular steht.
+  async function zeigeAnsicht(bytes, lauf) {
+    const lage = $('pdf-ansicht-lage');
+    const bilder = $('pdf-ansicht-bilder');
+    $('pdf-ansicht').hidden = false;
+    lage.textContent = 'Die Seite zeichnet die Ansicht.';
+    try {
+      const pdfjs = await holePdfjs();
+      const auftrag = pdfjs.getDocument({ data: bytes, useSystemFonts: true, isEvalSupported: false, verbosity: 0 });
+      const doc = await auftrag.promise;
+      const fertig = [];
+      for (let n = 1; n <= doc.numPages; n += 1) {
+        const blatt = await doc.getPage(n);
+        const sicht = blatt.getViewport({ scale: 1.5 });
+        const flaeche = document.createElement('canvas');
+        flaeche.width = Math.ceil(sicht.width);
+        flaeche.height = Math.ceil(sicht.height);
+        await blatt.render({ canvasContext: flaeche.getContext('2d'), viewport: sicht, background: '#ffffff' }).promise;
+        fertig.push({ quelle: flaeche.toDataURL('image/png'), breite: flaeche.width, hoehe: flaeche.height });
+      }
+      await auftrag.destroy();
+      if (lauf !== pdfLauf) return;
+      bilder.textContent = '';
+      fertig.forEach((b, i) => bilder.appendChild(neu('img', { src: b.quelle, width: String(b.breite), height: String(b.hoehe), alt: 'Blatt ' + (i + 1) + ' des ausgefüllten Formulars als Bild' })));
+      lage.textContent = '';
+    } catch (fehler) {
+      if (lauf !== pdfLauf) return;
+      bilder.textContent = '';
+      lage.textContent = 'Die Ansicht ließ sich hier nicht zeichnen. Das gespeicherte PDF ist davon nicht betroffen.';
+    }
+  }
+
+  // Speichert das ausgefüllte Formular. Vorher prüft die Seite, ob überhaupt etwas im Formular steht und ob im Feld für den Block noch etwas wartet.
+  function speichereAusgefuellt(vonLeiste) {
+    const zeile = $('pdf-meldung');
+    leseFelder();
+    const offen = blockLage();
+    let vorweg = '';
+    if (eigeneFelder() === 0 && offen === 'block') {
+      nimmBlock($('block').value);
+      vorweg = 'Der Block aus dem Feld „Block aus Teil G“ ist jetzt eingetragen. ';
+    }
+    versteckeAnsicht();
+    $('block-aus-rahmen').hidden = true;
+    if (vonLeiste) { $('t-pdf').scrollIntoView({ block: 'start' }); $('t-pdf').focus({ preventScroll: true }); }
+    if (eigeneFelder() === 0) {
+      zeile.classList.remove('gut');
+      zeile.textContent = offen === 'text'
+        ? 'Im Formular steht noch nichts. Der Text im Feld „Block aus Teil G“ ist kein Block der KI. Er kommt deshalb nicht in das PDF. Trage deine Werte in die Tabellen ein.'
+        : 'Im Formular steht noch nichts. Trage deine Werte in die Tabellen ein oder füge den Block der KI ein. Das Formular ohne Einträge bekommst du über „Leeres Formular speichern“.';
+      return;
+    }
+    const nachsatz = vorweg ? '' : (offen === 'block' ? ' Im Feld „Block aus Teil G“ steht ein Block, der noch nicht eingetragen ist. Er steht nicht im PDF.' : (offen === 'text' ? ' Der Text im Feld „Block aus Teil G“ ist kein Block der KI. Er steht nicht im PDF.' : ''));
+    const lauf = pdfLauf;
+    const zahl = eigeneFelder();
+    zeile.classList.add('gut');
+    zeile.textContent = 'Die Seite füllt das Formular aus.';
+    fuelleFormular().then((pdf) => {
+      const blob = new Blob([pdf.bytes], { type: 'application/pdf' });
+      speichereBlob(AUSGEFUELLT, blob);
+      if (lauf !== pdfLauf) return;
+      zeile.textContent = vorweg + gespeichert(AUSGEFUELLT, (zahl === 1 ? 'Dein ausgefülltes Feld steht im PDF.' : 'Deine ' + zahl + ' ausgefüllten Felder stehen im PDF.') + ' Darunter siehst du beide Blätter. Kommt keine Datei an, dann öffne das PDF im Browser oder kopiere die Werte als Block.') + nachsatz;
+      pdfUrl = URL.createObjectURL(blob);
+      $('pdf-oeffnen').href = pdfUrl;
+      $('pdf-oeffnen').target = '_blank';
+      $('pdf-oeffnen').rel = 'noopener';
+      let teilbar = false;
+      try { pdfDatei = new File([blob], AUSGEFUELLT, { type: 'application/pdf' }); teilbar = !!(navigator.canShare && navigator.canShare({ files: [pdfDatei] })); } catch (fehler) { teilbar = false; }
+      $('pdf-teilen').hidden = !teilbar;
+      $('pdf-wege').hidden = false;
+      zeigeAnsicht(pdf.bytes.slice(), lauf);
+    }, () => {
+      if (lauf !== pdfLauf) return;
+      zeile.classList.remove('gut');
+      zeile.textContent = 'Das Formular ließ sich nicht ausfüllen. Speichere das leere Formular und trage die Werte von Hand ein.';
+    });
+  }
+
+  // Übergibt das PDF an das Gerät. Auf dem Handy erscheint die Auswahl zum Sichern oder Weitergeben.
+  function teilePdf() {
+    if (!pdfDatei || !navigator.share) return;
+    navigator.share({ files: [pdfDatei], title: 'Übersicht zum Nachstudium' }).catch((fehler) => {
+      if (fehler && fehler.name === 'AbortError') return;
+      $('pdf-ansicht-lage').textContent = 'Das Teilen hat hier nicht geklappt. Öffne das PDF im Browser oder kopiere die Werte als Block.';
+    });
   }
 
   /* ---------- Tastatur ---------- */
@@ -2285,7 +2538,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     const teil = teileListe.find((t) => t.id === knopf.dataset.datei);
     const zeile = $('datei-meldung');
     if (!teil) return;
-    if (teil.pdf) { nimmFormularPdf(false, zeile); return; }
+    if (teil.pdf) { nimmFormularPdf(zeile); return; }
     if (knopf.dataset.tat === 'speichern') {
       speichere(teil.datei, teil.text());
       zeile.textContent = gespeichert(teil.datei, 'Kommt keine Datei an, dann kopiere den Text.');
@@ -2321,7 +2574,7 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
     speichere('masterprompt-nachstudium.txt', masterText());
     $('master-meldung').textContent = gespeichert('masterprompt-nachstudium.txt', '');
   });
-  $('formular-fuss').addEventListener('click', () => nimmFormularPdf(false, $('master-meldung')));
+  $('formular-fuss').addEventListener('click', () => nimmFormularPdf($('master-meldung')));
   $('zu-angaben').addEventListener('click', () => {
     const blatt = $('blatt');
     const erste = blatt.querySelector('.wert, .fehlt');
@@ -2336,27 +2589,38 @@ textarea#block-aus { min-height: 220px; font-family: "Roboto Mono", ui-monospace
   $('formular-leeren').addEventListener('click', () => {
     Object.keys(F).forEach((k) => { F[k] = ''; });
     $('block').value = '';
+    blockStand = '';
     $('block-meldung').textContent = '';
+    $('block-hand').hidden = true;
     $('pdf-meldung').textContent = '';
     $('block-aus-rahmen').hidden = true;
+    versteckeAnsicht();
     zeigeFormular();
     rechne();
     aktualisiere();
   });
-  $('pdf-speichern').addEventListener('click', () => nimmFormularPdf(true, $('pdf-meldung')));
-  $('pdf-leer').addEventListener('click', () => nimmFormularPdf(false, $('pdf-meldung')));
+  $('pdf-speichern').addEventListener('click', () => speichereAusgefuellt(false));
+  $('pdf-speichern-leiste').addEventListener('click', () => speichereAusgefuellt(true));
+  $('pdf-leer').addEventListener('click', () => { versteckeAnsicht(); nimmFormularPdf($('pdf-meldung')); });
+  $('pdf-teilen').addEventListener('click', teilePdf);
   $('block-kopieren').addEventListener('click', nimmBlockKopie);
-  $('zum-speichern').addEventListener('click', () => {
-    $('t-pdf').scrollIntoView({ block: 'start' });
-    $('t-pdf').focus({ preventScroll: true });
-  });
+  // Sprünge auf dem Bild „Formular“. Das Ziel steht am oberen Rand und bekommt den Fokus.
+  const springe = (id) => { $(id).scrollIntoView({ block: 'start' }); $(id).focus({ preventScroll: true }); };
+  $('zum-speichern').addEventListener('click', () => springe('t-pdf'));
+  $('zum-block').addEventListener('click', () => springe('t-block'));
+  $('zu-tabellen').addEventListener('click', () => springe('ft'));
+  $('zu-tabellen-2').addEventListener('click', () => springe('ft'));
+  // Die Leiste mit dem Knopf zum Speichern ruht, solange der Knopf im Abschnitt selbst zu sehen ist.
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((eintraege) => { $('speicherleiste').classList.toggle('ruht', eintraege[eintraege.length - 1].isIntersecting); }).observe($('pdf-speichern'));
+  }
 
   // Für die Prüfung der Seite
   window.anerkennungshilfe = { paket: paketText, prompt: promptText, zip: zipText, master: masterText, zustand: () => Z, unterlagen: () => MHD, bild: () => name(), ziele: zielmodule, module: modulText,
     bibliothek: () => B, teile: () => T, modulhandbuch: () => MH, modultabelle: () => MT, aktualisiere: aktualisiere, formular: () => F, liesBlock: liesBlock, rechneFormular: rechneFormular,
     formularBytes: formularBytes, zipBlob: zipBlob, beispiel: () => BEISPIEL, seitenAuswahl: seitenAuswahl, seitenInWorten: seitenInWorten, zeilenAusStuecken: zeilenAusStuecken, ohneSilbentrennung: ohneSilbentrennung, fuerPdf: fuerPdf,
     sammlung: () => S, sammlungSeiten: sSeiten, sammlungText: sDateitext, sammlungPassend: () => sPassend().map((e) => e.id), sammlungWahl: () => sWahl, ersteModulseite: ersteModulseite,
-    blockAusFormular: blockAusFormular, eingebettet: () => eingebettet };
+    blockAusFormular: blockAusFormular, eingebettet: () => eingebettet, zeilenText: zeilenText, eigeneFelder: eigeneFelder, blockLage: blockLage, fuelleFormular: fuelleFormular, ohneArbeiter: () => pdfjsOhneArbeiter };
 
   // Die Vorschläge für das Fach stammen aus der Bibliothek der Zielmodule.
   B.fach.forEach((f) => { const o = document.createElement('option'); o.value = f.n; $('faecher').appendChild(o); });
